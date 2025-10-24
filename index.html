@@ -2,82 +2,59 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#1976d2"/>
-  <title>FaceDoor PWA</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0ea5a3">
+  <title>FaceDoor</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
-  <!-- Face API (local fallback to libs/face-api.min.js) -->
-  <script>
-    (function(){
-      var s = document.createElement('script');
-      s.src = 'libs/face-api.min.js';
-      s.onerror = function(){ var s2 = document.createElement('script'); s2.src='https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js'; document.head.appendChild(s2); };
-      document.head.appendChild(s);
-    })();
-  </script>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Note: face-api.js models must be placed in ./models/ (download separately) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.12.0/dist/tf.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script defer src="app.js"></script>
 </head>
 <body>
-  <header><h1>FaceDoor (PWA)</h1></header>
-  <main>
-    <section id="camera-section" class="card">
-      <video id="video" autoplay muted playsinline></video>
-      <canvas id="overlay"></canvas>
+  <header class="app-header">
+    <h1>FaceDoor</h1>
+    <button id="installBtn" class="secondary" hidden>Instalar</button>
+  </header>
+
+  <main class="container">
+    <section class="video-section" aria-label="Video e overlay de reconhecimento">
+      <video id="inputVideo" autoplay muted playsinline playsinline="true"></video>
+      <canvas id="overlay" aria-hidden="true"></canvas>
     </section>
 
-    <section id="controls" class="card">
-      <div class="row">
-        <button id="btnEnroll">Enroll (capturar fotos)</button>
-        <button id="btnRecognize">Recognize</button>
-        <button id="btnStop">Stop</button>
+    <section class="controls" role="region" aria-label="Controles">
+      <div class="card">
+        <h2>Conexão ESP8266</h2>
+        <label>IP ou hostname: <input id="espHost" placeholder="192.168.4.1"></label>
+        <label>Porta: <input id="espPort" type="number" value="81"></label>
+        <label>Protocolo:
+          <select id="protocolSelect">
+            <option value="auto">Auto (WS then HTTP)</option>
+            <option value="ws">WebSocket (recomendado)</option>
+            <option value="http">HTTP GET (fallback)</option>
+          </select>
+        </label>
+        <button id="connectBtn">Conectar</button>
+        <div id="connStatus" aria-live="polite">Desconectado</div>
       </div>
-      <div class="row">
-        <label>Nome do usuário:</label>
-        <input id="inputName" placeholder="usuario1" value="usuario1">
-      </div>
-      <div class="row">
-        <label>IP / Host do ESP:</label>
-        <input id="inputHost" placeholder="192.168.1.45" value="192.168.1.45">
-        <label>Porta:</label>
-        <input id="inputPort" placeholder="80" value="80" style="width:80px">
-      </div>
-      <div class="row">
-        <label>Token (opcional):</label>
-        <input id="inputToken" placeholder="seu_token (recomendado)">
-      </div>
-      <div class="row">
-        <label>Comando (GET):</label>
-        <select id="selectCmd">
-          <option value="/led_on">/led_on</option>
-          <option value="/led_off">/led_off</option>
-        </select>
-        <label>Usar HTTPS?</label>
-        <input type="checkbox" id="useHttps">
-      </div>
-      <div class="row small">
-        <label>Threshold (confidence)</label>
-        <input id="inputThreshold" value="0.6" style="width:80px">
-        <label>Max descriptors per user</label>
-        <input id="inputMaxSamples" value="8" style="width:80px">
-      </div>
-    </section>
 
-    <section id="log" class="card">
-      <h3>Log & Status</h3>
-      <div id="status">Status: inicializando...</div>
-      <div id="events"></div>
+      <div class="card">
+        <h2>Reconhecimento</h2>
+        <label>Confiança: <input id="confThreshold" type="range" min="0.5" max="0.99" step="0.01" value="0.7"><span id="confValue">0.70</span></label>
+        <label><input id="autoOpen" type="checkbox"> Abrir automaticamente ao reconhecer</label>
+        <button id="enrollBtn">Cadastrar rosto</button>
+        <button id="clearDbBtn" class="danger">Limpar DB</button>
+      </div>
+
+      <div class="card log">
+        <h2>Logs</h2>
+        <pre id="log" aria-live="polite"></pre>
+      </div>
     </section>
   </main>
 
-  <footer>
-    <small>FaceDoor PWA — reconhecimento facial local (face-api.js) — empacotar com PWABuilder</small>
-  </footer>
-
-  <script src="app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js').then(()=>console.log('SW registrado')).catch(console.error);
-    }
-  </script>
+  <footer class="footer">FaceDoor — rodando localmente</footer>
 </body>
 </html>
